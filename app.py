@@ -46,7 +46,6 @@ if submit_button:
             # Save answers and state to session state
             st.session_state['answer_a'] = answer_a
             st.session_state['answer_b'] = answer_b
-            # st.session_state['selected_model'] = selected_model
             st.session_state['question'] = question
             st.session_state['results_displayed'] = True
         else:
