@@ -2,22 +2,10 @@ import streamlit as st
 import random
 from helpers import query_you_com, query_tavily, query_perplexity
 from mongod_db import MongoDBHandler
+from swarms.utils.loguru_logger import logger
+import time
 
-from pydantic import BaseModel
-from typing import List
-
-
-db_handler = MongoDBHandler()
-
-
-class UsageLog(BaseModel):
-    question: str
-    selected_functions: List[str]
-    answer_a: str
-    answer_b: str
-    feedback: str
-    timestamp: str
-
+mongo = MongoDBHandler()
 
 # Set Streamlit to wide mode
 st.set_page_config(layout="wide")
@@ -32,6 +20,22 @@ def ProcessQuestion(question):
     # Get answers from the selected functions
     answer_a = selected_functions[0](question)
     answer_b = selected_functions[1](question)
+    
+    # Log into mongodb
+    try: 
+        logger.info(f"Logging question: {question}")
+        mongo.add(
+            {
+                "question": question,
+                "answer_a": answer_a,
+                "answer_b": answer_b,
+                "selected_functions": [f.__name__ for f in selected_functions],
+                "query_time": time.time(),
+            }
+        )
+        logger.info("Successfully logged into mongodb")
+    except Exception as e:
+        logger.error(f"Error logging into mongodb: {e}")
 
     return answer_a, answer_b
 
@@ -47,7 +51,7 @@ if "question" not in st.session_state:
     st.session_state["question"] = ""
 
 # Streamlit app layout
-st.title("Chatbot Comparison")
+st.title("Search Engine Agent Comparison")
 
 # Create columns for the input and model selection
 input_col, control_col = st.columns([4, 1])
@@ -83,29 +87,33 @@ if submit_button:
 # Display results if available in session state
 if st.session_state["results_displayed"]:
     col1, col2 = st.columns(2)
-
     with col1:
         st.write("### Output A")
         st.write(st.session_state["answer_a"])
-
+        a_feedback_grid = st.columns(1)
     with col2:
         st.write("### Output B")
         st.write(st.session_state["answer_b"])
+        b_feedback_grid = st.columns(2)
 
-    feedback_col = st.columns([1, 1, 1, 1])
+    # Create a placeholder for the feedback div
+    feedback_placeholder = st.empty()
 
-    with feedback_col[0]:
+    def display_feedback(message):
+        feedback_placeholder.markdown(
+            f'<div style="position: fixed; bottom: 10px; left: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">{message}</div>',
+            unsafe_allow_html=True,
+        )
+
+    with a_feedback_grid[0]:
         if st.button("A is better 🥇"):
-            st.write("You selected: A is better")
-
-    with feedback_col[1]:
-        if st.button("B is better 🥈"):
-            st.write("You selected: B is better")
-
-    with feedback_col[2]:
+            display_feedback("You selected: A is better")
+    with b_feedback_grid[0]:
+        if st.button("B is better 💪"):
+            display_feedback("You selected: B is better")
+    with a_feedback_grid[0]:
         if st.button("It's a Tie 🤝"):
-            st.write("You selected: It's a Tie")
-
-    with feedback_col[3]:
+            display_feedback("You selected: It's a Tie")
+    with b_feedback_grid[0]:
         if st.button("Both are bad 👎"):
-            st.write("You selected: Both are bad")
+            display_feedback("You selected: Both are bad")

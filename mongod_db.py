@@ -18,6 +18,8 @@ class MongoDBHandler:
         uri: str = mongo_db_uri(),
         db_name: str = "search-arena",
         collection_name: str = "search-arena-usage",
+        *args,
+        **kwargs
     ) -> None:
         """
         Initializes the MongoDBHandler with the specified database and collection.
@@ -27,7 +29,7 @@ class MongoDBHandler:
             db_name (str): The name of the database.
             collection_name (str): The name of the collection.
         """
-        self.client = MongoClient(uri)
+        self.client = MongoClient(uri, *args, **kwargs)
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
 
