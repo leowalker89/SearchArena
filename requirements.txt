@@ -3,3 +3,4 @@ exa_py
 tavily-python
 openai
 exa_py
+pymongo

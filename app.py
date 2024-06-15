@@ -1,31 +1,50 @@
 import streamlit as st
 import random
 from helpers import query_you_com, query_tavily, query_perplexity
+from mongod_db import MongoDBHandler
+
+from pydantic import BaseModel
+from typing import List
+
+
+db_handler = MongoDBHandler()
+
+
+class UsageLog(BaseModel):
+    question: str
+    selected_functions: List[str]
+    answer_a: str
+    answer_b: str
+    feedback: str
+    timestamp: str
+
 
 # Set Streamlit to wide mode
 st.set_page_config(layout="wide")
+
 
 # Define the function to process the question
 def ProcessQuestion(question):
     # Randomly select two out of the three functions
     functions = [query_you_com, query_tavily, query_perplexity]
     selected_functions = random.sample(functions, 2)
-    
+
     # Get answers from the selected functions
     answer_a = selected_functions[0](question)
     answer_b = selected_functions[1](question)
-    
+
     return answer_a, answer_b
 
+
 # Initialize session state if not already done
-if 'results_displayed' not in st.session_state:
-    st.session_state['results_displayed'] = False
-if 'answer_a' not in st.session_state:
-    st.session_state['answer_a'] = ""
-if 'answer_b' not in st.session_state:
-    st.session_state['answer_b'] = ""
-if 'question' not in st.session_state:
-    st.session_state['question'] = ""
+if "results_displayed" not in st.session_state:
+    st.session_state["results_displayed"] = False
+if "answer_a" not in st.session_state:
+    st.session_state["answer_a"] = ""
+if "answer_b" not in st.session_state:
+    st.session_state["answer_b"] = ""
+if "question" not in st.session_state:
+    st.session_state["question"] = ""
 
 # Streamlit app layout
 st.title("Chatbot Comparison")
@@ -35,7 +54,9 @@ input_col, control_col = st.columns([4, 1])
 
 with input_col:
     # Text box for user input with character limit
-    question = st.text_area("Enter your question here (max 1000 characters):", max_chars=1000)
+    question = st.text_area(
+        "Enter your question here (max 1000 characters):", max_chars=1000
+    )
 
 with control_col:
     # Submit button
@@ -48,27 +69,29 @@ if submit_button:
             answer_a, answer_b = ProcessQuestion(question)
 
             # Save answers and state to session state
-            st.session_state['answer_a'] = answer_a
-            st.session_state['answer_b'] = answer_b
-            st.session_state['question'] = question
-            st.session_state['results_displayed'] = True
+            st.session_state["answer_a"] = answer_a
+            st.session_state["answer_b"] = answer_b
+            st.session_state["question"] = question
+            st.session_state["results_displayed"] = True
         else:
-            st.error("Your question exceeds the 1,000 character limit. Please shorten your question.")
+            st.error(
+                "Your question exceeds the 1,000 character limit. Please shorten your question."
+            )
     else:
         st.error("Please enter a question.")
 
 # Display results if available in session state
-if st.session_state['results_displayed']:
+if st.session_state["results_displayed"]:
     col1, col2 = st.columns(2)
 
     with col1:
         st.write("### Output A")
-        st.write(st.session_state['answer_a'])
+        st.write(st.session_state["answer_a"])
 
     with col2:
         st.write("### Output B")
-        st.write(st.session_state['answer_b'])
-    
+        st.write(st.session_state["answer_b"])
+
     feedback_col = st.columns([1, 1, 1, 1])
 
     with feedback_col[0]:

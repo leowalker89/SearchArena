@@ -32,7 +32,6 @@ class Perplexity(BaseLLM):
     A class to interact with the Perplexity API using OpenAI's interface.
     """
 
-
     def __init__(self, api_key: str = perplexity_api_key(), *args, **kwargs):
         """
         Initialize the Perplexity class with an API key.
@@ -120,9 +119,7 @@ class ExaAgent(BaseLLM):
             dict: The search results from the Exa API.
         """
         try:
-            results = self.exa.search(
-                task, use_autoprompt=True, *args, **kwargs
-            )
+            results = self.exa.search(task, use_autoprompt=True, *args, **kwargs)
             return results
         except Exception as e:
             raise RuntimeError(f"Error running the search query: {e}")
@@ -153,9 +150,7 @@ class ResearchAgent:
         """
         self.api_key = api_key
 
-        self.llm = OpenAIChat(
-            temperature=temperature, max_tokens=max_tokens
-        )
+        self.llm = OpenAIChat(temperature=temperature, max_tokens=max_tokens)
         self.agent = self._initialize_agent()
 
     def _initialize_agent(self):
@@ -197,9 +192,7 @@ class ResearchAgent:
         Returns:
             str: The agent's response after processing the task.
         """
-        articles = fetch_web_articles_bing_api(
-            task, subscription_key=self.api_key
-        )
+        articles = fetch_web_articles_bing_api(task, subscription_key=self.api_key)
         sources_prompts = "".join([task, articles])
         agent_response = self.agent.run(sources_prompts)
         return agent_response
@@ -260,9 +253,7 @@ class TavilyWrapper:
             raise TypeError("Task must be a string")
 
         try:
-            response = self.client.search(
-                query=task, search_depth="advanced"
-            )
+            response = self.client.search(query=task, search_depth="advanced")
             return response
         except Exception as e:
             raise RuntimeError(f"Error performing search: {e}")
