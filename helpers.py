@@ -21,7 +21,8 @@ def query_you_com(query):
             headers=headers,
         )
         response.raise_for_status()  # Raises an HTTPError if the response code was unsuccessful
-        return response.json()
+        resp = response.json()
+        return resp['answer']
     except requests.exceptions.HTTPError as http_err:
         return f"HTTP error occurred: {http_err}"
     except Exception as err:
@@ -42,7 +43,8 @@ def query_tavily(query):
     }
     response = requests.post("https://api.tavily.com/search", json=payload)
     if response.status_code == 200:
-        return response.json()
+        resp = response.json()
+        return resp['answer']
     else:
         return f"Request failed with status code: {response.status_code}"
 

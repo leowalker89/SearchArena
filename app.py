@@ -1,14 +1,20 @@
 import streamlit as st
+import random
+from helpers import query_you_com, query_tavily, query_perplexity
 
 # Set Streamlit to wide mode
 st.set_page_config(layout="wide")
 
 # Define the function to process the question
 def ProcessQuestion(question):
-    # Placeholder for the actual implementation
-    # This should return answers from two models, A and B
-    answer_a = "Answer from Model A"
-    answer_b = "Answer from Model B"
+    # Randomly select two out of the three functions
+    functions = [query_you_com, query_tavily, query_perplexity]
+    selected_functions = random.sample(functions, 2)
+    
+    # Get answers from the selected functions
+    answer_a = selected_functions[0](question)
+    answer_b = selected_functions[1](question)
+    
     return answer_a, answer_b
 
 # Initialize session state if not already done
@@ -18,8 +24,6 @@ if 'answer_a' not in st.session_state:
     st.session_state['answer_a'] = ""
 if 'answer_b' not in st.session_state:
     st.session_state['answer_b'] = ""
-if 'selected_model' not in st.session_state:
-    st.session_state['selected_model'] = ""
 if 'question' not in st.session_state:
     st.session_state['question'] = ""
 
@@ -51,18 +55,18 @@ if submit_button:
         else:
             st.error("Your question exceeds the 1,000 character limit. Please shorten your question.")
     else:
-        st.error("Please enter a question and select a model.")
+        st.error("Please enter a question.")
 
 # Display results if available in session state
 if st.session_state['results_displayed']:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.write(f"### Output A from {st.session_state['selected_model']}")
+        st.write("### Output A")
         st.write(st.session_state['answer_a'])
 
     with col2:
-        st.write(f"### Output B from {st.session_state['selected_model']}")
+        st.write("### Output B")
         st.write(st.session_state['answer_b'])
     
     feedback_col = st.columns([1, 1, 1, 1])
