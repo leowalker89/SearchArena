@@ -32,6 +32,7 @@ class Perplexity(BaseLLM):
     A class to interact with the Perplexity API using OpenAI's interface.
     """
 
+
     def __init__(self, api_key: str = perplexity_api_key(), *args, **kwargs):
         """
         Initialize the Perplexity class with an API key.
@@ -322,11 +323,11 @@ task = "What is the swarmms framework"
 
 # Run all of the agents
 agents = [
-    Perplexity,
+    # Perplexity,
     ExaAgent,
     # ResearchAgent,
     TavilyWrapper,
-    # YouSearchAgent,
+    YouSearchAgent,
 ]
 
 # Run each agent with the given task
