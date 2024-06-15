@@ -21,7 +21,7 @@ except ImportError as e:
 
 def perplexity_api_key():
     try:
-        api_key = os.getenv("PERPLEXITY_API_KEY")
+        api_key = os.getenv("PPLX_API_KEY")
         return api_key
     except Exception as e:
         print(f"Error: {e}")
@@ -32,7 +32,8 @@ class Perplexity(BaseLLM):
     A class to interact with the Perplexity API using OpenAI's interface.
     """
 
-    def __init__(self, api_key: str = perplexity_api_key, *args, **kwargs):
+
+    def __init__(self, api_key: str = perplexity_api_key(), *args, **kwargs):
         """
         Initialize the Perplexity class with an API key.
 
