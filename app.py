@@ -1,20 +1,32 @@
 import streamlit as st
 import random
-from helpers import query_you_com, query_tavily, query_perplexity
-from mongod_db import MongoDBHandler
-from swarms.utils.loguru_logger import logger
+from helpers import query_you_com, query_tavily, query_perplexity, query_brave
+from provider_info import search_providers
+# from mongod_db import MongoDBHandler
+# from swarms.utils.loguru_logger import logger
 import time
 
-mongo = MongoDBHandler()
+# mongo = MongoDBHandler()
 
 # Set Streamlit to wide mode
 st.set_page_config(layout="wide")
 
+# Add information to sidebar
+st.sidebar.title("About the App")
+st.sidebar.write("""
+This app allows you to compare responses from different search engines.
+Submit a question, and you'll receive answers from two randomly selected search engines.
+You can then vote on which response you prefer.
+""")
+st.sidebar.write("""
+**[GitHub](https://github.com/leowalker89/SearchArena)**
+
+""")
 
 # Define the function to process the question
 def ProcessQuestion(question):
-    # Randomly select two out of the three functions
-    functions = [query_you_com, query_tavily, query_perplexity]
+    # Randomly select two out of the four functions
+    functions = [query_you_com, query_tavily, query_perplexity, query_brave]
     selected_functions = random.sample(functions, 2)
 
     # Get answers from the selected functions
@@ -22,98 +34,157 @@ def ProcessQuestion(question):
     answer_b = selected_functions[1](question)
     
     # Log into mongodb
-    try: 
-        logger.info(f"Logging question: {question}")
-        mongo.add(
-            {
-                "question": question,
-                "answer_a": answer_a,
-                "answer_b": answer_b,
-                "selected_functions": [f.__name__ for f in selected_functions],
-                "query_time": time.time(),
-            }
-        )
-        logger.info("Successfully logged into mongodb")
-    except Exception as e:
-        logger.error(f"Error logging into mongodb: {e}")
+    # try: 
+    #     logger.info(f"Logging question: {question}")
+    #     mongo.add(
+    #         {
+    #             "question": question,
+    #             "answer_a": answer_a,
+    #             "answer_b": answer_b,
+    #             "selected_functions": [f.__name__ for f in selected_functions],
+    #             "query_time": time.time(),
+    #         }
+    #     )
+    #     logger.info("Successfully logged into mongodb")
+    # except Exception as e:
+    #     logger.error(f"Error logging into mongodb: {e}")
 
-    return answer_a, answer_b
+    return answer_a, answer_b, selected_functions
 
 
 # Initialize session state if not already done
-if "results_displayed" not in st.session_state:
-    st.session_state["results_displayed"] = False
-if "answer_a" not in st.session_state:
-    st.session_state["answer_a"] = ""
-if "answer_b" not in st.session_state:
-    st.session_state["answer_b"] = ""
-if "question" not in st.session_state:
-    st.session_state["question"] = ""
+default_values = {
+    "state": "arena_ready",
+    "question": "",
+    "answer_a": "",
+    "answer_b": "",
+    "source_a": "",
+    "source_b": "",
+    "winner": "",
+    "selected_button": ""
+}
+
+for key, value in default_values.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 # Streamlit app layout
 st.title("Search Engine Agent Comparison")
 
-# Create columns for the input and model selection
-input_col, control_col = st.columns([4, 1])
-
-with input_col:
-    # Text box for user input with character limit
-    question = st.text_area(
-        "Enter your question here (max 1000 characters):", max_chars=1000
-    )
-
-with control_col:
-    # Submit button
-    submit_button = st.button("Submit")
-
-if submit_button:
+def on_submit():
+    question = st.session_state["question_input"]
     if question:
-        if len(question) <= 1000:
-            # Process the question and get answers
-            answer_a, answer_b = ProcessQuestion(question)
+        answer_a, answer_b, selected_functions = ProcessQuestion(question)
+        st.session_state["question"] = question
+        st.session_state["answer_a"] = answer_a
+        st.session_state["answer_b"] = answer_b
+        st.session_state["source_a"] = selected_functions[0].__name__
+        st.session_state["source_b"] = selected_functions[1].__name__
+        st.session_state["state"] = "arena_review"
 
-            # Save answers and state to session state
-            st.session_state["answer_a"] = answer_a
-            st.session_state["answer_b"] = answer_b
-            st.session_state["question"] = question
-            st.session_state["results_displayed"] = True
-        else:
-            st.error(
-                "Your question exceeds the 1,000 character limit. Please shorten your question."
-            )
-    else:
-        st.error("Please enter a question.")
+def handle_vote(vote):
+    st.session_state["winner"] = vote
+    st.session_state["state"] = "arena_results"
 
-# Display results if available in session state
-if st.session_state["results_displayed"]:
+def get_provider_info(provider_function_name):
+    provider_name_map = {
+        'query_you_com': 'You.com',
+        'query_tavily': 'Tavily',
+        'query_perplexity': 'Perplexity AI',
+        'query_brave': 'Brave Search'
+    }
+    provider_name = provider_name_map.get(provider_function_name)
+    return next((provider for provider in search_providers if provider['company_name'] == provider_name), {})
+
+def render_ready_state():
+    st.text_area("Enter your question here (max 1000 characters):", 
+                 max_chars=1000, 
+                 key="question_input", 
+                 on_change=on_submit)
+    st.button("Submit", on_click=on_submit)
+
+def render_review_state():
+    st.write("## Results")
     col1, col2 = st.columns(2)
     with col1:
-        st.write("### Output A")
+        st.write("### Answer A")
         st.write(st.session_state["answer_a"])
-        a_feedback_grid = st.columns(1)
     with col2:
-        st.write("### Output B")
+        st.write("### Answer B")
         st.write(st.session_state["answer_b"])
-        b_feedback_grid = st.columns(2)
+    st.write("### Vote for the Best Answer")
+    col1, col2, col3, col4 = st.columns(4)
+    if col1.button("It's a Tie 🤝"):
+        handle_vote("Tie")
+    if col2.button("A is better 💪"):
+        handle_vote("A")
+    if col3.button("B is better 🥇"):
+        handle_vote("B")
+    if col4.button("Both are bad 👎"):
+        handle_vote("Both are bad")
 
-    # Create a placeholder for the feedback div
-    feedback_placeholder = st.empty()
+def render_results_state():
+    st.write("## Results")
+    st.write(f"### Question: {st.session_state['question']}")
+    
+    provider_info_a = get_provider_info(st.session_state["source_a"])
+    provider_info_b = get_provider_info(st.session_state["source_b"])
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.session_state["winner"] == "A":
+            st.write(f"### ⭐ {provider_info_a['company_name']} 🥇")
+        elif st.session_state["winner"] == "Tie":
+            st.write(f"### 🤝 {provider_info_a['company_name']} 🤝")
+        elif st.session_state["winner"] == "Both are bad":
+            st.write(f"### 👎 {provider_info_a['company_name']} 👎")
+        else:
+            st.write(f"### {provider_info_a['company_name']} 🥈")
+        st.write("**Response:**")
+        st.markdown(f"<div style='padding: 10px; border: 1px solid #ddd;'>{st.session_state['answer_a']}</div>", unsafe_allow_html=True)
 
-    def display_feedback(message):
-        feedback_placeholder.markdown(
-            f'<div style="position: fixed; bottom: 10px; left: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">{message}</div>',
-            unsafe_allow_html=True,
-        )
+    with col2:
+        if st.session_state["winner"] == "B":
+            st.write(f"### ⭐ {provider_info_b['company_name']} 🥇")
+        elif st.session_state["winner"] == "Tie":
+            st.write(f"### 🤝 {provider_info_b['company_name']} 🤝")
+        elif st.session_state["winner"] == "Both are bad":
+            st.write(f"### 👎 {provider_info_b['company_name']} 👎")
+        else:
+            st.write(f"### {provider_info_b['company_name']} 🥈")
+        st.write("**Response:**")
+        st.markdown(f"<div style='padding: 10px; border: 1px solid #ddd;'>{st.session_state['answer_b']}</div>", unsafe_allow_html=True)
+    
+    st.write("### Feedback")
+    st.text_area("Please provide feedback on why you chose the winner:", key="feedback")
+    st.write("### About the search providers:")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Website:** [{provider_info_a['website']}]({provider_info_a['website']})")
+        st.write(f"**Overview:** {provider_info_a['overview']}")
+    with col2:
+        st.write(f"**Website:** [{provider_info_b['website']}]({provider_info_b['website']})")
+        st.write(f"**Overview:** {provider_info_b['overview']}")
 
-    with a_feedback_grid[0]:
-        if st.button("A is better 🥇"):
-            display_feedback("You selected: A is better")
-    with b_feedback_grid[0]:
-        if st.button("B is better 💪"):
-            display_feedback("You selected: B is better")
-    with a_feedback_grid[0]:
-        if st.button("It's a Tie 🤝"):
-            display_feedback("You selected: It's a Tie")
-    with b_feedback_grid[0]:
-        if st.button("Both are bad 👎"):
-            display_feedback("You selected: Both are bad")
+if st.session_state["state"] == "arena_ready":
+    render_ready_state()
+elif st.session_state["state"] == "arena_review":
+    render_review_state()
+elif st.session_state["state"] == "arena_results":
+    render_results_state()
+
+# Apply custom CSS to highlight the selected button
+selected_button = st.session_state.get("selected_button", "")
+
+if selected_button:
+    st.markdown(
+        f"""
+        <style>
+        button[kind="primary"]{{
+            background-color: #4CAF50 !important;
+            color: white !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
