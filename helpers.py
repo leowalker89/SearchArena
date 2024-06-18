@@ -1,5 +1,6 @@
 import requests
 from dotenv import load_dotenv
+from typing import Optional
 import os
 
 # Load environment variables from .env file
@@ -9,8 +10,7 @@ load_dotenv()
 YOU_COM_API_KEY = os.getenv("YOU_API_KEY")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 PERPLEXITY_API_KEY = os.getenv("PPLX_API_KEY")
-BRAVE_API_KEY = os.getenv("BRAVESEARCH_API_KEY")
-
+BRAVE_API_KEY = os.getenv("BRAVE_AI_API_KEY")
 
 def query_you_com(query):
     headers = {"X-API-Key": YOU_COM_API_KEY}
@@ -76,71 +76,6 @@ def query_perplexity(query):
         return f"Request failed with status code: {response.status_code}"
 
 
-# def query_brave(query):
-#     headers = {"X-API-Key": BRAVE_API_KEY}
-#     params = {
-#         "q": query,
-#         "count": 1,
-#         "summary": True
-#     }
-#     response = requests.get("https://api.search.brave.com/res/v1/web/search", params=params, headers=headers)
-#     if response.status_code == 200:
-#         return response.json().get("summary", "No summary available.")
-#     else:
-#         return f"Request failed with status code: {response}"
-
-
-# def brave_search_summarization(query):
-#     # Endpoint for web search with summary
-#     web_search_url = "https://api.search.brave.com/res/v1/web/search"
-#     summarizer_url = "https://api.search.brave.com/res/v1/summarizer/search"
-
-#     # Headers for the requests
-#     headers = {
-#         "Accept": "application/json",
-#         "Accept-Encoding": "gzip",
-#         "X-Subscription-Token": BRAVE_API_KEY
-#     }
-
-#     # Parameters for the initial web search request
-#     web_search_params = {
-#         "q": query,
-#         "summary": 1
-#     }
-
-#     # Make the initial request to the web search endpoint
-#     web_search_response = requests.get(web_search_url, headers=headers, params=web_search_params)
-
-#     # Check if the request was successful
-#     if web_search_response.status_code != 200:
-#         raise Exception(f"Web search request failed with status code {web_search_response.status_code}")
-
-#     web_search_data = web_search_response.json()
-
-#     # Extract the summarizer key from the response
-#     summarizer_key = web_search_data.get('summarizer', {}).get('key')
-#     if not summarizer_key:
-#         raise Exception("No summarizer key found in the web search response")
-
-#     # Parameters for the summarizer request
-#     summarizer_params = {
-#         "key": summarizer_key,
-#         "entity_info": 1
-#     }
-
-#     # Make the request to the summarizer endpoint
-#     summarizer_response = requests.get(summarizer_url, headers=headers, params=summarizer_params)
-
-#     # Check if the request was successful
-#     if summarizer_response.status_code != 200:
-#         raise Exception(f"Summarizer request failed with status code {summarizer_response.status_code}")
-
-#     summarizer_data = summarizer_response.json()
-
-#     # Return the summarized content
-#     return summarizer_data
-
-
 def ProcessQuestion(question, model):
     if model == "You.com":
         return query_you_com(question)
@@ -152,3 +87,21 @@ def ProcessQuestion(question, model):
         return query_brave(question)
     else:
         return "Model not supported"
+
+
+from brave_ai import BraveAIWrapper
+
+def query_brave(query: str) -> Optional[str]:
+    """
+    Get a summary for the given query using BraveAIWrapper.
+
+    Args:
+        query (str): The search query.
+        api_key (str): The API key for Brave Search.
+
+    Returns:
+        Optional[str]: Summarized result or None if an error occurs.
+    """
+    brave_ai = BraveAIWrapper(api_key=BRAVE_API_KEY)
+    summary = brave_ai.get_and_summarize(query)
+    return summary

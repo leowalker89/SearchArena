@@ -39,6 +39,7 @@ class BraveAIWrapper(BaseModel):
             "count": count,
             "summary": True,
             "safe_search": safe_search,
+            "extra_snippets": True,
         }
         try:
             response = requests.get(self.base_search_url, headers=self.headers, params=params)
