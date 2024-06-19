@@ -1,3 +1,4 @@
+---
 title: SearchArena
 emoji: 🐠
 colorFrom: red
@@ -6,7 +7,7 @@ sdk: streamlit
 sdk_version: 1.35.0
 app_file: app.py
 pinned: false
-
+---
 # Search Arena
 
 **Search Arena** is a comprehensive platform designed to rigorously evaluate and compare search-based web agents. Leveraging a variety of metrics, Search Arena ensures that users can identify the most effective solutions for their needs.
