@@ -9,18 +9,31 @@ import time
 # mongo = MongoDBHandler()
 
 # Set Streamlit to wide mode
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="SearchArena")
 
 # Add information to sidebar
-st.sidebar.title("About the App")
-st.sidebar.write("""
-This app allows you to compare responses from different search engines.
-Submit a question, and you'll receive answers from two randomly selected search engines.
-You can then vote on which response you prefer.
-""")
-st.sidebar.write("""
-**[GitHub](https://github.com/leowalker89/SearchArena)**
+# st.sidebar.title("About the App")
+# st.sidebar.write("""
+# This app allows you to compare responses from different search engines.
+# Submit a question, and you'll receive answers from two randomly selected search engines.
+# You can then vote on which response you prefer.
+# """)
+# st.sidebar.write("""
+# **[GitHub](https://github.com/leowalker89/SearchArena)**""")
 
+# Header section
+st.title("⚔️ Search Arena: Evaluating and Comparing Search Providers")
+
+# Subheader with introduction
+st.header("Welcome to Search Arena")
+st.write("""
+Welcome to Search Arena, an open platform for evaluating and comparing search providers through crowdsourced human preferences. Inspired by the groundbreaking work of LMSYS's Chatbot Arena in benchmarking large language models (LLMs), Search Arena aims to bring a similar approach to the world of search.
+
+Our platform allows you to input a query and receive results from two anonymous search providers. After reviewing the results, you can vote for the provider that delivered the most relevant and helpful information. The search providers' identities are kept hidden during the voting process to ensure unbiased evaluation. You can continue refining your query and interacting with the search results until you are satisfied with the outcome.
+
+Currently, Search Arena compares results from four leading search providers: Tavily, Brave Search, Perplexity, and You.com. By collecting votes from a wide user base, we aim to establish a robust leaderboard that reflects the real-world performance and user preferences of these search engines.
+
+Join us in our mission to advance search technology through open collaboration and data-driven insights. Your participation will contribute to a growing dataset that will be made available to the research community, fostering innovation and improvement in the field of information retrieval.
 """)
 
 # Define the function to process the question
