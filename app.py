@@ -27,7 +27,7 @@ st.title("⚔️ Search Arena: Evaluating and Comparing Search Providers")
 # Subheader with introduction
 st.header("Welcome to Search Arena")
 st.write("""
-Welcome to Search Arena, an open platform for evaluating and comparing search providers through crowdsourced human preferences. Inspired by the groundbreaking work of LMSYS's Chatbot Arena in benchmarking large language models (LLMs), Search Arena aims to bring a similar approach to the world of search.
+Welcome to Search Arena, an open platform for evaluating and comparing search providers through crowdsourced preferences. Inspired by the groundbreaking work of LMSYS's Chatbot Arena in benchmarking large language models (LLMs), Search Arena aims to bring a similar approach to the world of search.
 
 Our platform allows you to input a query and receive results from two anonymous search providers. After reviewing the results, you can vote for the provider that delivered the most relevant and helpful information. The search providers' identities are kept hidden during the voting process to ensure unbiased evaluation. You can continue refining your query and interacting with the search results until you are satisfied with the outcome.
 
