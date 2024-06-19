@@ -1,11 +1,6 @@
-brave_ai
 python-dotenv
-exa_py
-helpers
 langchain-core
 openai
 pymongo
-requests
 streamlit
 swarms
-tavily
