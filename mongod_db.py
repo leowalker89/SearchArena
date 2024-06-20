@@ -3,10 +3,9 @@ from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 import os
 from dotenv import load_dotenv
-
+import unittest
 
 load_dotenv()
-
 
 def mongo_db_uri():
     return os.getenv("MONGODB_URI")
@@ -15,9 +14,9 @@ def mongo_db_uri():
 class MongoDBHandler:
     def __init__(
         self,
-        uri: str = mongo_db_uri(),
-        db_name: str = "search-arena",
-        collection_name: str = "search-arena-usage",
+        uri: str = os.getenv("MONGODB_URI") or mongo_db_uri(),
+        db_name: str = os.getenv("MONGODB_DB") or "search-arena",
+        collection_name: str = os.getenv("MONGODB_COLLECTION") or "search-arena-usage",
         *args,
         **kwargs
     ) -> None:
@@ -48,7 +47,23 @@ class MongoDBHandler:
         except PyMongoError as e:
             print(f"Error: {e}")
             raise
+        
+    def update(self, query: Dict[str, Any], update: Dict[str, Any]) -> None:
+        """
+        Updates documents in the MongoDB collection based on the provided query and update.
 
+        Args:
+            query (Dict[str, Any]): The query to filter documents.
+            update (Dict[str, Any]): The update to apply to the documents.
+
+        Raises:
+            PyMongoError: If an error occurs while updating the documents.
+        """
+        try:
+            self.collection.update_many(query, update)
+        except PyMongoError as e:
+            print(f"Error: {e}")
+            raise
     def query(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Queries documents from the MongoDB collection based on the provided query.

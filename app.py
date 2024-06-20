@@ -3,8 +3,10 @@ import random
 from helpers import query_you_com, query_tavily, query_perplexity, query_brave
 from provider_info import search_providers
 from mongod_db import MongoDBHandler
+from bson.objectid import ObjectId
 # from swarms.utils.loguru_logger import logger
 import time
+import uuid
 
 # mongo = MongoDBHandler()
 
@@ -38,6 +40,7 @@ Join us in our mission to advance search technology through open collaboration a
 
 # Define the function to process the question
 def ProcessQuestion(question):
+    document_id = None
     # Randomly select two out of the four functions
     functions = [query_you_com, query_tavily, query_perplexity, query_brave]
     selected_functions = random.sample(functions, 2)
@@ -51,21 +54,42 @@ def ProcessQuestion(question):
     
     try: 
         # logger.info(f"Logging question: {question}")
-        mongo.add(
+        document_id = mongo.add(
             {
                 "question": question,
                 "answer_a": answer_a,
                 "answer_b": answer_b,
                 "selected_functions": [f.__name__ for f in selected_functions],
                 "query_time": time.time(),
+                "session_id": st.session_state.session_id,
             }
         )
         # logger.info("Successfully logged into mongodb")
     except Exception as e:
         # logger.error(f"Error logging into mongodb: {e}")
-        print("Error logging into mongodb: {e}")
+        print(f"Error logging into mongodb: {e}")
 
-    return answer_a, answer_b, selected_functions
+    return answer_a, answer_b, selected_functions, document_id
+
+def UpdateVote(session_id, vote):
+    mongo = MongoDBHandler()
+    try:
+        mongo.update(
+            {"session_id": session_id},
+            {"$set": {"vote": vote}}
+        )
+    except Exception as e:
+        print(f"Error updating vote in mongodb: {e}")
+
+def UpdateFeedback(session_id, feedback):
+    mongo = MongoDBHandler()
+    try:
+        mongo.update(
+            {"session_id": session_id},
+            {"$set": {"feedback": feedback}}
+        )
+    except Exception as e:
+        print(f"Error updating feedback in mongodb: {e}")
 
 
 # Initialize session state if not already done
@@ -77,7 +101,10 @@ default_values = {
     "source_a": "",
     "source_b": "",
     "winner": "",
-    "selected_button": ""
+    "selected_button": "",
+    "document_id": "",
+    "feedback": "",
+    "session_id": str(uuid.uuid4())
 }
 
 for key, value in default_values.items():
@@ -90,17 +117,19 @@ st.title("Search Engine Agent Comparison")
 def on_submit():
     question = st.session_state["question_input"]
     if question:
-        answer_a, answer_b, selected_functions = ProcessQuestion(question)
+        answer_a, answer_b, selected_functions, document_id = ProcessQuestion(question)
         st.session_state["question"] = question
         st.session_state["answer_a"] = answer_a
         st.session_state["answer_b"] = answer_b
         st.session_state["source_a"] = selected_functions[0].__name__
         st.session_state["source_b"] = selected_functions[1].__name__
         st.session_state["state"] = "arena_review"
+        st.session_state["document_id"] = document_id
 
 def handle_vote(vote):
     st.session_state["winner"] = vote
     st.session_state["state"] = "arena_results"
+    UpdateVote(st.session_state["session_id"], vote)
 
 def get_provider_info(provider_function_name):
     provider_name_map = {
@@ -172,8 +201,12 @@ def render_results_state():
         st.markdown(f"<div style='padding: 10px; border: 1px solid #ddd;'>{st.session_state['answer_b']}</div>", unsafe_allow_html=True)
     
     st.write("### Feedback")
-    st.text_area("Please provide feedback on why you chose the winner:", key="feedback")
+    feedback = st.text_area("Please provide feedback on why you chose the winner:")
+    if feedback:
+        UpdateFeedback(st.session_state["session_id"], feedback)
+    
     st.write("### About the search providers:")
+    
     col1, col2 = st.columns(2)
     with col1:
         st.write(f"**Website:** [{provider_info_a['website']}]({provider_info_a['website']})")
