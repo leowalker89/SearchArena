@@ -1,6 +1,7 @@
 import requests
 from dotenv import load_dotenv
 from typing import Optional
+from brave_ai import BraveAIWrapper
 import os
 
 # Load environment variables from .env file
@@ -88,8 +89,6 @@ def ProcessQuestion(question, model):
     else:
         return "Model not supported"
 
-
-from brave_ai import BraveAIWrapper
 
 def query_brave(query: str) -> Optional[str]:
     """

@@ -2,7 +2,7 @@ import streamlit as st
 import random
 from helpers import query_you_com, query_tavily, query_perplexity, query_brave
 from provider_info import search_providers
-# from mongod_db import MongoDBHandler
+from mongod_db import MongoDBHandler
 # from swarms.utils.loguru_logger import logger
 import time
 
@@ -47,20 +47,23 @@ def ProcessQuestion(question):
     answer_b = selected_functions[1](question)
     
     # Log into mongodb
-    # try: 
-    #     logger.info(f"Logging question: {question}")
-    #     mongo.add(
-    #         {
-    #             "question": question,
-    #             "answer_a": answer_a,
-    #             "answer_b": answer_b,
-    #             "selected_functions": [f.__name__ for f in selected_functions],
-    #             "query_time": time.time(),
-    #         }
-    #     )
-    #     logger.info("Successfully logged into mongodb")
-    # except Exception as e:
-    #     logger.error(f"Error logging into mongodb: {e}")
+    mongo = MongoDBHandler()
+    
+    try: 
+        # logger.info(f"Logging question: {question}")
+        mongo.add(
+            {
+                "question": question,
+                "answer_a": answer_a,
+                "answer_b": answer_b,
+                "selected_functions": [f.__name__ for f in selected_functions],
+                "query_time": time.time(),
+            }
+        )
+        # logger.info("Successfully logged into mongodb")
+    except Exception as e:
+        # logger.error(f"Error logging into mongodb: {e}")
+        print("Error logging into mongodb: {e}")
 
     return answer_a, answer_b, selected_functions
 
