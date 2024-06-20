@@ -204,6 +204,7 @@ def render_results_state():
     feedback = st.text_area("Please provide feedback on why you chose the winner:")
     if feedback:
         UpdateFeedback(st.session_state["session_id"], feedback)
+        st.write("Thank you for your feedback!")
     
     st.write("### About the search providers:")
     
