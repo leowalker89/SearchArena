@@ -14,29 +14,37 @@ import uuid
 st.set_page_config(layout="wide", page_title="SearchArena")
 
 # Add information to sidebar
-# st.sidebar.title("About the App")
-# st.sidebar.write("""
-# This app allows you to compare responses from different search engines.
-# Submit a question, and you'll receive answers from two randomly selected search engines.
-# You can then vote on which response you prefer.
-# """)
-# st.sidebar.write("""
-# **[GitHub](https://github.com/leowalker89/SearchArena)**""")
+st.sidebar.title("About the App")
+st.sidebar.write("""
+Welcome to Search Arena, an open platform for evaluating and comparing search providers.
+
+**How it works:**
+1. Enter a single question in the text area.
+2. Receive answers from two anonymous search providers.
+3. Review the answers and vote for the one that you prefer.
+4. After voting, the identities of the search providers will be revealed.
+5. You can also provide feedback on your choice.
+
+**Search Providers:**
+- [Tavily](https://tavily.com/)
+- [Brave Search](https://brave.com/search/api)
+- [Perplexity AI](https://docs.perplexity.ai/)
+- [You.com](https://api.you.com/)
+
+Each search provider has its unique features and capabilities. After voting, you can learn more about the providers and their offerings.
+
+**[GitHub](https://github.com/leowalker89/SearchArena)**
+
+**[LinkedIn](https://www.linkedin.com/in/leowalker89/)**
+
+**[X/Twitter](https://twitter.com/leowalker9)**
+""")
 
 # Header section
-st.title("⚔️ Search Arena: Evaluating and Comparing Search Providers")
+st.title("⚔️ Search Arena: Comparing Search Providers")
 
-# Subheader with introduction
-st.header("Welcome to Search Arena")
-st.write("""
-Welcome to Search Arena, an open platform for evaluating and comparing search providers through crowdsourced preferences. Inspired by the groundbreaking work of LMSYS's Chatbot Arena in benchmarking large language models (LLMs), Search Arena aims to bring a similar approach to the world of search.
-
-Our platform allows you to input a query and receive results from two anonymous search providers. After reviewing the results, you can vote for the provider that delivered the most relevant and helpful information. The search providers' identities are kept hidden during the voting process to ensure unbiased evaluation. You can continue refining your query and interacting with the search results until you are satisfied with the outcome.
-
-Currently, Search Arena compares results from four leading search providers: Tavily, Brave Search, Perplexity, and You.com. By collecting votes from a wide user base, we aim to establish a robust leaderboard that reflects the real-world performance and user preferences of these search engines.
-
-Join us in our mission to advance search technology through open collaboration and data-driven insights. Your participation will contribute to a growing dataset that will be made available to the research community, fostering innovation and improvement in the field of information retrieval.
-""")
+# Display the image
+st.image("images/arena.png", use_column_width=True)
 
 # Define the function to process the question
 def ProcessQuestion(question):
@@ -90,29 +98,6 @@ def UpdateFeedback(session_id, feedback):
         )
     except Exception as e:
         print(f"Error updating feedback in mongodb: {e}")
-
-
-# Initialize session state if not already done
-default_values = {
-    "state": "arena_ready",
-    "question": "",
-    "answer_a": "",
-    "answer_b": "",
-    "source_a": "",
-    "source_b": "",
-    "winner": "",
-    "selected_button": "",
-    "document_id": "",
-    "feedback": "",
-    "session_id": str(uuid.uuid4())
-}
-
-for key, value in default_values.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-
-# Streamlit app layout
-st.title("Search Engine Agent Comparison")
 
 def on_submit():
     question = st.session_state["question_input"]
@@ -215,6 +200,26 @@ def render_results_state():
     with col2:
         st.write(f"**Website:** [{provider_info_b['website']}]({provider_info_b['website']})")
         st.write(f"**Overview:** {provider_info_b['overview']}")
+
+
+# Initialize session state if not already done
+default_values = {
+    "state": "arena_ready",
+    "question": "",
+    "answer_a": "",
+    "answer_b": "",
+    "source_a": "",
+    "source_b": "",
+    "winner": "",
+    "selected_button": "",
+    "document_id": "",
+    "feedback": "",
+    "session_id": str(uuid.uuid4())
+}
+
+for key, value in default_values.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 if st.session_state["state"] == "arena_ready":
     render_ready_state()
